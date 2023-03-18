@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { Client, Collection, Events, EmbedBuilder, GatewayIntentBits  } = require('discord.js');
+const { clientId, guildId, token } = require('./config.json');
 const path = require('node:path');
 const channelId = '1084465309559300173'; // ID del canal donde se creará el panel
 const aufg = require('auto-update-from-github');
@@ -33,7 +34,7 @@ for (const file of commandFiles) {
 	}
 }
 
-client.login("NzcwNDkxOTI5NTIyODY0MTMw.G5nuLD.wNFnR1zugEOvi_SWiLfAtXlWetrKcUwmbTLEm8");
+client.login(token);
 
 client.once('ready', () => {
     console.log("Discord bot online")
