@@ -4,6 +4,8 @@ const { clientId, guildId, token } = require('./config.json');
 const path = require('node:path');
 const channelId = '1084465309559300173'; // ID del canal donde se creará el panel
 const aufg = require('auto-update-from-github');
+const chokidar = require('chokidar');
+
 
 const client = new Client({
     intents: [
@@ -15,7 +17,7 @@ aufg({
     git: 'sayghteight/compra-venta-bot', // 远程git地址
     dir: './', // 本地路径
     type: 'commit', // 检测类型 version | commit
-    freq: 3000 // 刷新频率
+    freq: 60000 // 刷新频率
 });
 
 client.commands = new Collection();
@@ -100,4 +102,16 @@ client.on('interactionCreate', async interaction => {
 			logChannel.send(`Ha ocurrido un error al intentar eliminar el canal \`${channelToDelete.name}\`.`);
 		});
 	}
+});
+
+// Monitorea los cambios en cualquier archivo dentro del directorio actual
+const watcher = chokidar.watch('.', {
+    ignored: [/(^|[\/\\])\../], // Limpia algunas carpetas ignoradas por defecto
+    persistent: true
+});
+
+// Registra el evento 'change' en el watcher, para reiniciar el proceso en cuanto haya algún cambio
+watcher.on('change', () => {
+    console.warn('Some files changed. Restarting process...');
+    process.exit(1);
 });
