@@ -1,0 +1,20 @@
+{
+  "name": "skorost-motors",
+  "version": "1.0.0",
+  "description": "Skorost Motors compraventa",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "deploy": "node deploy_commands.js"
+  },
+  "author": "Sayghteight",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/builders": "^1.4.0",
+    "auto-update-from-github": "^1.0.8",
+    "axios": "^1.3.4",
+    "discord": "^0.8.2",
+    "discord.js": "^14.7.1",
+    "fs": "^0.0.1-security"
+  }
+}
