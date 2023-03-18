@@ -13,7 +13,7 @@ const client = new Client({
 
 aufg({
     git: 'sayghteight/compra-venta-bot', // 远程git地址
-    dir: './repository', // 本地路径
+    dir: './', // 本地路径
     type: 'commit', // 检测类型 version | commit
     freq: 3000 // 刷新频率
 });
