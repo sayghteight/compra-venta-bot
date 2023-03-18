@@ -1,6 +1,6 @@
 {
   "name": "skorost-motors",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Skorost Motors compraventa",
   "main": "main.js",
   "scripts": {
