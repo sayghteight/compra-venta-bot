@@ -21,9 +21,7 @@ module.exports = {
                 { name: 'Uptime', value: `${uptimeString}` },
                 { name: 'Users', value: `${interaction.client.users.cache.size}`, inline: true },
                 { name: 'Desarrollado', value: `Darthar`, inline: true }
-            )
-            .setTimestamp()
-            .setFooter('Skorost Motors');
+            );
 
         return interaction.reply({ embeds: [embed] });
     },
