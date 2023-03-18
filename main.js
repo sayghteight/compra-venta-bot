@@ -112,6 +112,6 @@ const watcher = chokidar.watch('.', {
 
 // Registra el evento 'change' en el watcher, para reiniciar el proceso en cuanto haya algún cambio
 watcher.on('change', () => {
-    console.warn('Some files changed. Restarting process...');
+    console.warn('Detectada actualización, se va a reiniciar el bot.');
     process.exit(1);
 });
