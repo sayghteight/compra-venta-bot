@@ -1,5 +1,6 @@
 const { EmbedBuilder, ChannelType, SlashCommandBuilder, ButtonStyle, PermissionsBitField, ButtonBuilder, StringSelectMenuBuilder, ActionRowBuilder } = require('discord.js');
 const API = require('../core/api/apiCalls');
+const { supportRoles, categoryIdTicket} = require('../config.json');
 const api = new API();
 
 
@@ -58,12 +59,11 @@ module.exports = {
             try {
                 const selectedOption = optionList.find(opt => opt.value === interaction.values[0]); // Encontrar la opción seleccionada por el usuario
                             
-                const categoryId = '1084465309743841302'; // ID de la categoría donde se crearán los canales de soporte
-                const supportRoleIds = ['1084465309194408033', '1084465309194408030']; // IDs de los roles que tendrán permiso para acceder a los canales
+                const supportRoleIds = supportRoles;
                 
                 const { guild } = interaction;                
                 let channelName = 'Ticket-undefined'
-                const supportCategory = guild.channels.cache.get(categoryId);
+                const supportCategory = categoryIdTicket;
                 
                 if (selectedOption.value == 'sales_support') 
                 {
@@ -83,7 +83,7 @@ module.exports = {
                 const newChannel = await guild.channels.create({
                     name: channelName,
                     type: ChannelType.GuildText,
-                    parent: supportCategory.id,
+                    parent: categoryIdTicket,
                     permissionOverwrites: [
                         {
                             id: guild.roles.everyone.id,
@@ -117,14 +117,6 @@ module.exports = {
                 .setColor('#00ff00');
 
                 await newChannel.send({ embeds: [userConfirmationMessage], components: [btnRow] });
-
-                if (interaction.customId === 'closeTicketBtn') {
-                    newChannel.delete().then(() => {
-                        console.log(`Canal ${newChannel.name} eliminado después de que el usuario lo cerró`);
-                    }).catch((error) => {
-                        console.error(`Error al eliminar el canal ${newChannel.name}:`, error);
-                    });
-                }
 
                 await interaction.message.delete();
                 collector.stop();

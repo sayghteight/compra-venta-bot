@@ -35,7 +35,6 @@ module.exports = {
                 { name: 'Cuota Mensual', value: `$${cuota.toFixed(2)}` }
             );
 
-            
         return interaction.reply({ embeds: [embed] });
     },
 };

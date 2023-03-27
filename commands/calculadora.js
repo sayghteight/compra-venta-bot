@@ -1,37 +1,27 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
+const Utils = require('../core/lib/utils');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('calculadora')
         .setDescription('Calculadora de precios de compra y venta.')
-        .addNumberOption(option => option.setName('precio_inicial').setDescription('Precio Inicial').setRequired(true))
-        .addNumberOption(option => option.setName('porcentaje_compra').setDescription('Porcentaje de Compra').setRequired(true))
-        .addNumberOption(option => option.setName('porcentaje_venta').setDescription('Porcentaje de Venta').setRequired(true)),
+        .addNumberOption(option => option.setName('precio_inicial').setDescription('Precio Inicial').setRequired(true)),
     async execute(interaction) {
         const precioInicial = interaction.options.getNumber('precio_inicial');
-        const porcentajeCompra = interaction.options.getNumber('porcentaje_compra');
-        const porcentajeVenta = interaction.options.getNumber('porcentaje_venta');
+        if (typeof precioInicial !== 'number') return;
 
-        const precioCompra = precioInicial * porcentajeCompra;
-        const precioVenta = precioInicial * porcentajeVenta;
+        const prices = Utils.getSellBuyPrices(precioInicial);
 
         const embed = new EmbedBuilder()
             .setColor('#0099ff')
-            .setTitle('Calculadora de Precios')
+            .setTitle('Calculadora de Precios')                
+            .setThumbnail('https://cdn.discordapp.com/attachments/1062088210462806026/1084220929120411780/Vintage_and_Classic_Car_Community_Club_Logo.png')
             .addFields(
-                { name: 'Precio de compra', value: `${precioCompra}` },
-                { name: 'Precio de venta', value: `${precioVenta}` },
+                { name: 'Precio de compra', value: `${prices.sellPrice}` },
+                { name: 'Precio de venta', value: `${prices.buyPrice}` },
             );
 
         await interaction.reply({ embeds: [embed] });
-    },
-
-    getFloat(value) {
-        if (isNaN(parseFloat(value))) {
-          return null;
-        }
-        return parseFloat(value);
     }
 };
-

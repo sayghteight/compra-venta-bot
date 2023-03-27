@@ -1,23 +1,14 @@
 const fs = require('fs');
 const { Client, Collection, Events, EmbedBuilder, GatewayIntentBits  } = require('discord.js');
-const { clientId, guildId, token } = require('./config.json');
+const { token } = require('./config.json');
 const path = require('node:path');
 const channelId = '1084465309559300173'; // ID del canal donde se creará el panel
 const aufg = require('auto-update-from-github');
-const chokidar = require('chokidar');
-
 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
     ]
-});
-
-aufg({
-    git: 'sayghteight/compra-venta-bot', // 远程git地址
-    dir: './', // 本地路径
-    type: 'version', // 检测类型 version | commit
-    freq: 60000 // 刷新频率
 });
 
 client.commands = new Collection();
@@ -39,31 +30,29 @@ for (const file of commandFiles) {
 client.login(token);
 
 client.once('ready', () => {
-    console.log("Discord bot online")
-	const channel = client.channels.cache.get(channelId);
-    if (!channel) return console.error(`No se encontró ningún canal con el ID ${channelId}.`);
+  console.log("Discord bot online")
+  const channel = client.channels.cache.get(channelId);
+  if (!channel) return console.error(`No se encontró ningún canal con el ID ${channelId}.`);
 
-	// Crear un mensaje de bienvenida
-	const welcomeMessage = new EmbedBuilder()
-	.setTitle('Bienvenido a nuestro sistema de tickets')
-	.setDescription('Por favor, escribe /ticket para ver las opciones disponibles.')
-	.setColor('#00bfff');
+  // Crear un mensaje de bienvenida
+  const welcomeMessage = new EmbedBuilder()
+  .setTitle('Bienvenido a nuestro sistema de tickets')
+  .setDescription('Por favor, escribe /ticket para ver las opciones disponibles.')
+  .setColor('#00bfff');
 
-    channel.messages.fetch().then((messages) => {
-        channel.bulkDelete(messages);
-		channel.send({ embeds: [welcomeMessage] });
-
-    }).catch((error) => {
-        console.error(`No se pudieron borrar los mensajes del canal ${channelId}: ${error}`);
-    });
-
-
+  channel.messages.fetch().then((messages) => {
+    channel.bulkDelete(messages);
+    channel.send({ embeds: [welcomeMessage] });
+  }).catch((error) => {
+    console.error(`No se pudieron borrar los mensajes del canal ${channelId}: ${error}`);
+  });
 });
 
+// Detect Button Presses and Event Interactions
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
-	const command = interaction.client.commands.get(interaction.commandName);
+	const command = client.commands.get(interaction.commandName);
 
 	if (!command) {
 		console.error(`No command matching ${interaction.commandName} was found.`);
@@ -82,11 +71,15 @@ client.on(Events.InteractionCreate, async interaction => {
 	}
 });
 
+client.on('guildMemberAdd', (member) => {
+  console.log(`guildMemberAdd: ${member}`);
+});
 
 client.on('interactionCreate', async interaction => {
 	const { guild } = interaction;    
 
-	const logChannel = guild.channels.cache.find(channel => channel.name === 'admin-logs');
+	const logChannel = guild.channels.cache.find(channel => channel.name === 'interaction-logs');
+  const commandName = interaction.commandName;
 
 	if (!interaction.isButton()) return; // Ignore anything that isn't a button press
   
@@ -94,8 +87,17 @@ client.on('interactionCreate', async interaction => {
 		const channelToDelete = interaction.channel;
 		channelToDelete.delete()
 		.then(() => {
-			console.log(`Canal ${channelToDelete.name} eliminado después de que el usuario lo cerró`);
-			logChannel.send(`El canal \`${channelToDelete.name}\` ha sido eliminado luego de que el usuario lo cerrara.`);
+			console.log(`Canal ${channelToDelete.name} eliminado después de que el usuario lo cerró`);      
+      const logMessage = new EmbedBuilder()
+      .setColor('#0099ff')
+      .setTitle(`Se ha ejecutado un comando | Cerrar Ticket `)
+      .setThumbnail('https://cdn.discordapp.com/attachments/1062088210462806026/1084220929120411780/Vintage_and_Classic_Car_Community_Club_Logo.png')
+      .addFields(
+          { name: 'ID Channel: ', value: channelToDelete.id, inline: true },
+          { name: 'Channel Name: ', value: channelToDelete.name, inline: true },
+      );
+      
+      logChannel.send({ embeds: [logMessage] });
 		})
 		.catch(error => {
 			console.error(`Error al eliminar el canal ${channelToDelete.name}:`, error);
@@ -104,14 +106,17 @@ client.on('interactionCreate', async interaction => {
 	}
 });
 
-// Monitorea los cambios en cualquier archivo dentro del directorio actual
-const watcher = chokidar.watch('.', {
-    ignored: [/(^|[\/\\])\../], // Limpia algunas carpetas ignoradas por defecto
-    persistent: true
-});
-
-// Registra el evento 'change' en el watcher, para reiniciar el proceso en cuanto haya algún cambio
-watcher.on('change', () => {
-    console.warn('Detectada actualización, se va a reiniciar el bot.');
-    process.exit(1);
-});
+// Register crash bot
+process.on('uncaughtException', (err) => {
+	const date = new Date();
+	const errorMsg = err.stack.replace(new RegExp(`${__dirname}/`, 'g'), './');
+	const errorLog = `[${date}] Uncaught Exception: ${errorMsg}`;
+  
+	fs.writeFile("./crashlogs.txt", errorLog, err => {  
+	  if(err) {
+		console.error("Uncaught Exception: ", errorMsg);
+		throw err;
+	  }
+	  process.exit(1); // Mandatory (as per the NodeJS docs)
+	});
+  });

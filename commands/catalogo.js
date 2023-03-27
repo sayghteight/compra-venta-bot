@@ -7,6 +7,7 @@ module.exports = {
         .setName('catalogo')
         .setDescription('Envia el catalogo actual en un embed'),
     async execute(interaction) {
+        const channel = interaction.channel;
         const memberRoles = interaction.member.roles;
         const hasRequiredRole =
           memberRoles.cache.has('1084465309194408030') || // ROLE_SELLER_ID
@@ -17,7 +18,11 @@ module.exports = {
           return;
         }
 
-        const channel = interaction.channel;
+        if (channel.id != '1084465309559300171') {
+          await interaction.reply('Lo siento, este comando debe ser ejecutado solo en el canal de Catalogos.');
+          return;
+        }
+
         // Obtenemos una colección con todos los mensajes del canal
         const messages = await channel.messages.fetch();
 
