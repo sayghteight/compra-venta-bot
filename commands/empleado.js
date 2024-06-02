@@ -23,6 +23,10 @@ module.exports = {
 
         try {
             if (subcommand === 'agregar') {
+                if (!member.permissions.has(PermissionsBitField.Flags.ManageRoles) || !member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
+                    return interaction.reply({ content: 'No tienes permisos para gestionar roles o canales.', ephemeral: true });
+                }
+                
                 await addEmployee(interaction, guild);
             }
         } catch (err) {
