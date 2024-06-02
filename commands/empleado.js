@@ -1,102 +1,99 @@
 const { EmbedBuilder, SlashCommandBuilder, ChannelType, PermissionsBitField } = require('discord.js');
-const { employmentRoles, categoryIdEmploye } = require('../config.json'); 
+const { employment } = require('../config.json'); 
 const API = require('../core/api/apiCalls');
 const api = new API();
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('empleado')
         .setDescription('Crea un empleado o elimina uno existente.')
         .addSubcommand(subcommand =>
             subcommand
-              .setName('agregar')
-              .setDescription('Agrega un nuevo empleado')        
-              .addUserOption(option => option
-                .setName('user')
-                .setDescription('El usuario a agregar a la lista de empleados.'))
-              .addStringOption(option => option.setName('bank').setDescription('Cuenta bancaría para realizar los pagos.')),
-          )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('eliminar')
-                .setDescription('Borrara el empleado')
-                .addUserOption(option => option
-                    .setName('user')
-                    .setDescription('El usuario a eliminar de la lista de empleados.')),
-            )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('actualizar')
-                .setDescription('Este comando permitira agregar el nivel de tuneos')
-                .addUserOption(option => option
-                    .setName('user')
-                    .setDescription('El usuario a actualizar de la lista de empleados.')),
-            ),
+                .setName('agregar')
+                .setDescription('Agrega un nuevo empleado')
+                .addUserOption(option => 
+                    option.setName('user')
+                        .setDescription('El usuario a agregar a la lista de empleados.')
+                        .setRequired(true)
+                )
+        ),
     async execute(interaction) {
-        const type = interaction.options.getSubcommand();
+        const subcommand = interaction.options.getSubcommand();
         const { guild } = interaction;
-    	try {
-    		if (type === "agregar") {
 
-                let [target, banco, channelName] = [ 
-                    interaction.options.getUser('user') || null, 
-                    interaction.options.getString('bank') || 'PS-Undefined', 
-                    ""
-                ];
+        try {
+            if (subcommand === 'agregar') {
+                await addEmployee(interaction, guild);
+            }
+        } catch (err) {
+            console.error(err);
+            return interaction.reply({ content: 'Ocurrió un error al ejecutar el comando.', ephemeral: true });
+        }
+    }
+};
 
-                const roles = employmentRoles;
-
-                const targetMember = interaction.guild.members.cache.find(member => member.id === target.id);
-                
-                channelName = `Employment-${targetMember.nickname}`;
-
-                const employeChannel = await guild.channels.create({
-                    name: channelName,
-                    type: ChannelType.GuildText,
-                    parent: categoryIdEmploye,
-                    permissionOverwrites: [
-                        {
-                            id: guild.roles.everyone.id,
-                            deny: [PermissionsBitField.Flags.ViewChannel],
-                        },
-                        ...roles.map(roleId => ({
-                            id: roleId,
-                            allow: [PermissionsBitField.Flags.ViewChannel],
-                        })),
-                        {
-                            id: targetMember.user.id,
-                            allow: [PermissionsBitField.Flags.ViewChannel],
-                        }
-                    ]
-                });
-
-                await api.submitData('workers', {
-                    data: {
-                      Nombre: targetMember.nickname,
-                      bank: banco,
-                      active: true,
-                    }
-                });
-
-                // Aviso al usuario de que se ha abierto el ticket
-                const employeConfirmationMessage = new EmbedBuilder()
-                .setTitle('¡Bienvenido a tu area personal!')
-                .setDescription(`¡Bienvenido a Skoros't Motors! Nos complace darle la bienvenida a nuestro equipo y estamos emocionados de tenerlo a bordo. Esperamos trabajar juntos y lograr grandes cosas en los próximos días. Esta será su area personal donde podrá contactar con nosotros y se le comunicara los ingresos a su cuenta bancaría con las ventas realizadas.`)
-                .setColor('#00ff00');
-                
-                await employeChannel.send({ embeds: [employeConfirmationMessage] });
-
-                return interaction.reply({
-                    content: `Se ha creado el area personal del empleado ${targetMember.nickname} podrá visitarla en #${channelName}`,
-                    ephemeral: true
-                });
-    		} else if (type === "eliminar") {
-    			// Code to delete an existing employee 
-    		} else if (type === "actualizar") {
-    			// Code to update an existing employee 
-    		}
-    	} catch (err) {
-    		console.error(err);
-    	}
+async function addEmployee(interaction, guild) {
+    const targetUser = interaction.options.getUser('user');
+    if (!targetUser) {
+        return interaction.reply({ content: 'No se ha especificado un usuario válido.', ephemeral: true });
     }
 
+    const targetMember = guild.members.cache.get(targetUser.id);
+    if (!targetMember) {
+        return interaction.reply({ content: 'No se ha encontrado el usuario en el servidor.', ephemeral: true });
+    }
+
+    const channelName = `RSS-${targetMember.nickname || targetMember.user.username}`;
+    const roles = employment.roles.split(',').map(role => role.trim());
+
+    const employeeChannel = await createEmployeeChannel(guild, channelName, roles, targetMember);
+
+    const employeeConfirmationMessage = createEmployeeConfirmationMessage();
+
+    await employeeChannel.send({ embeds: [employeeConfirmationMessage] });
+
+    await assignRolesToUser(targetMember, roles);
+    
+    return interaction.reply({
+        content: `Se ha creado el área personal del empleado ${targetMember.nickname || targetMember.user.username}. Podrá visitarla en #${channelName}`,
+        ephemeral: true
+    });
+}
+
+async function createEmployeeChannel(guild, channelName, roles, targetMember) {
+    return guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildText,
+        parent: employment.category,
+        permissionOverwrites: [
+            {
+                id: guild.roles.everyone.id,
+                deny: [PermissionsBitField.Flags.ViewChannel],
+            },
+            ...roles.map(roleId => ({
+                id: roleId,
+                allow: [PermissionsBitField.Flags.ViewChannel],
+            })),
+            {
+                id: targetMember.id,
+                allow: [PermissionsBitField.Flags.ViewChannel],
+            }
+        ]
+    });
+}
+
+function createEmployeeConfirmationMessage() {
+    return new EmbedBuilder()
+        .setTitle('¡Bienvenido a tu área personal!')
+        .setDescription(`¡Bienvenido a Public Relations! Nos complace darle la bienvenida a nuestro equipo y estamos emocionados de tenerlo a bordo. Esperamos trabajar juntos y lograr grandes cosas en los próximos días. Esta será tu área personal, donde podrás contactar con el supervisor de la división y proponerle ideas para realizar.`)
+        .setColor('#00ff00');
+}
+
+async function assignRolesToUser(member, roles) {
+    for (const roleId of roles) {
+        const role = await member.guild.roles.fetch(roleId);
+        if (role) {
+            await member.roles.add(role);
+        }
+    }
 }
