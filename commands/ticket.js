@@ -124,17 +124,6 @@ async function addButtons(channel) {
                 .setDisabled(true)
         );
     await channel.send({ components: [btnRow] });
-
-    const buttonFilter = i => i.customId === 'closeTicketBtn' || i.customId === 'transcriptTicketBtn';
-    const buttonCollector = channel.createMessageComponentCollector({ filter: buttonFilter, time: 86400000 });
-
-    buttonCollector.on('collect', async i => {
-        if (i.customId === 'closeTicketBtn') {
-            await handleCloseTicket(i);
-        } else if (i.customId === 'transcriptTicketBtn') {
-            await handleTranscriptTicket(i);
-        }
-    });
 }
 
 async function handleCloseTicket(interaction) {

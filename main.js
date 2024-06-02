@@ -3,7 +3,6 @@ const path = require('node:path');
 const { handleCloseTicket } = require('./commands/ticket.js');
 const { Client, Collection, Events, EmbedBuilder, GatewayIntentBits } = require('discord.js');
 const { token, channelId, roleId, welcomeChannelId } = require('./config.json');
-const aufg = require('auto-update-from-github');
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages]
@@ -92,10 +91,8 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on('guildMemberAdd', async member => {
-    console.log('Alguien entro');
     try {
         await member.roles.add(roleId);
-        console.log(`Se ha otorgado el rol a ${member.user.tag}`);
     } catch (error) {
         console.error(`Error al asignar el rol: ${error}`);
     }
