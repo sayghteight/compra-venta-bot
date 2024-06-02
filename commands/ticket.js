@@ -139,7 +139,7 @@ async function handleCloseTicket(interaction) {
         const logMessage = new EmbedBuilder()
             .setColor('#0099ff')
             .setTitle('Se ha ejecutado un comando | Cerrar Ticket')
-            .setThumbnail('https://cdn.discordapp.com/attachments/1062088210462806026/1084220929120411780/Vintage_and_Classic_Car_Community_Club_Logo.png')
+            .setThumbnail('https://pbs.twimg.com/profile_images/733025483286319104/pYSOdDwU_400x400.jpg')
             .addFields(
                 { name: 'ID Channel:', value: ticketChannel.id, inline: true },
                 { name: 'Channel Name:', value: ticketChannel.name, inline: true }
